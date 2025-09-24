@@ -1,5 +1,5 @@
-import { Pagination, Stack, Typography } from "@mui/material";
-import { useGames } from "../contexts/GameContext";
+import { Pagination, Stack, Typography } from '@mui/material';
+import { useGames } from '../contexts/GameContext';
 
 export default function Pager() {
   const { state, dispatch, searchAll, searchByGenre, searchByPlatform, searchByText } = useGames();
@@ -20,7 +20,10 @@ export default function Pager() {
       <Pagination
         page={state.page}
         count={totalPages}
-        onChange={(_, p) => { dispatch({ type: "SET_PAGE", payload: p }); lastAction(); }}
+        onChange={(_, p) => {
+          dispatch({ type: 'SET_PAGE', payload: p });
+          lastAction();
+        }}
         color="primary"
       />
     </Stack>

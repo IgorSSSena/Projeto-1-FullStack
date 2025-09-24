@@ -18,6 +18,24 @@
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
+@keyframes neonBlink {
+  0%,
+  100% {
+    box-shadow:
+      0 0 2px #7b287d,
+      0 0 10px #7b287d,
+      0 0 20px #330c2f,
+      0 0 30px #330c2f;
+  }
+  50% {
+    box-shadow:
+      0 0 2px #7b287d,
+      0 0 40px #7b287d,
+      0 0 60px #330c2f,
+      0 0 80px #330c2f;
+  }
+}
+
 @keyframes logo-spin {
   from {
     transform: rotate(0deg);

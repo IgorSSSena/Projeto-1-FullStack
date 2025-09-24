@@ -1,15 +1,15 @@
-import { createContext, useContext, useMemo, useReducer, useEffect } from "react";
+import { createContext, useContext, useMemo, useReducer, useEffect } from 'react';
 
-const API_BASE = "https://api.rawg.io/api";
+const API_BASE = 'https://api.rawg.io/api';
 const API_KEY = import.meta.env.VITE_RAWG_KEY;
 
 const initialState = {
   loading: false,
   error: null,
-  searchText: "",
-  genreId: "",       
-  platformId: "",   
-  ordering: "-rating",
+  searchText: '',
+  genreId: '',
+  platformId: '',
+  ordering: '-rating',
 
   results: [],
   total: 0,
@@ -22,25 +22,30 @@ const initialState = {
 
 function reducer(state, action) {
   switch (action.type) {
-    case "SET_SEARCH_TEXT":
+    case 'SET_SEARCH_TEXT':
       return { ...state, searchText: action.payload, page: 1 };
-    case "SET_GENRE":
+    case 'SET_GENRE':
       return { ...state, genreId: action.payload, page: 1 };
-    case "SET_PLATFORM":
+    case 'SET_PLATFORM':
       return { ...state, platformId: action.payload, page: 1 };
-    case "SET_ORDERING":
+    case 'SET_ORDERING':
       return { ...state, ordering: action.payload, page: 1 };
-    case "SET_PAGE":
+    case 'SET_PAGE':
       return { ...state, page: action.payload };
-    case "FETCH_START":
+    case 'FETCH_START':
       return { ...state, loading: true, error: null };
-    case "FETCH_SUCCESS":
-      return { ...state, loading: false, results: action.payload.results, total: action.payload.count };
-    case "FETCH_ERROR":
+    case 'FETCH_SUCCESS':
+      return {
+        ...state,
+        loading: false,
+        results: action.payload.results,
+        total: action.payload.count,
+      };
+    case 'FETCH_ERROR':
       return { ...state, loading: false, error: action.payload };
-    case "SET_GENRES":
+    case 'SET_GENRES':
       return { ...state, genres: action.payload };
-    case "SET_PLATFORMS":
+    case 'SET_PLATFORMS':
       return { ...state, platforms: action.payload };
     default:
       return state;
@@ -64,31 +69,30 @@ export function GameProvider({ children }) {
     return res.json();
   }
 
- 
   useEffect(() => {
     (async () => {
       try {
         const [genres, platforms] = await Promise.all([
-          getJSON(buildURL("/genres")),
-          getJSON(buildURL("/platforms")),
+          getJSON(buildURL('/genres')),
+          getJSON(buildURL('/platforms')),
         ]);
-        dispatch({ type: "SET_GENRES", payload: genres.results || [] });
-        dispatch({ type: "SET_PLATFORMS", payload: platforms.results || [] });
+        dispatch({ type: 'SET_GENRES', payload: genres.results || [] });
+        dispatch({ type: 'SET_PLATFORMS', payload: platforms.results || [] });
       } catch (e) {
         // Soft-fail lookup lists
-        console.warn("Lookup load failed:", e);
+        console.warn('Lookup load failed:', e);
       }
     })();
   }, []);
 
   // Core fetcher (shared by all 3 searches)
   async function fetchGames(params) {
-    dispatch({ type: "FETCH_START" });
+    dispatch({ type: 'FETCH_START' });
     try {
-      const data = await getJSON(buildURL("/games", params));
-      dispatch({ type: "FETCH_SUCCESS", payload: data });
+      const data = await getJSON(buildURL('/games', params));
+      dispatch({ type: 'FETCH_SUCCESS', payload: data });
     } catch (e) {
-      dispatch({ type: "FETCH_ERROR", payload: e.message });
+      dispatch({ type: 'FETCH_ERROR', payload: e.message });
     }
   }
 
@@ -106,11 +110,14 @@ export function GameProvider({ children }) {
   // 2) By genre  (requires genreId)
   function searchByGenre() {
     if (!state.genreId) {
-      dispatch({ type: "FETCH_ERROR", payload: "Please select a genre before searching by genre." });
+      dispatch({
+        type: 'FETCH_ERROR',
+        payload: 'Por favor busque um jogo antes de selecionar um gênero.',
+      });
       return;
     }
     fetchGames({
-      genres: state.genreId,          // RAWG expects ids here
+      genres: state.genreId, // RAWG expects ids here
       ordering: state.ordering,
       page: state.page,
       page_size: state.pageSize,
@@ -120,25 +127,31 @@ export function GameProvider({ children }) {
   // 3) By platform (requires platformId)
   function searchByPlatform() {
     if (!state.platformId) {
-      dispatch({ type: "FETCH_ERROR", payload: "Please select a platform before searching by platform." });
+      dispatch({
+        type: 'FETCH_ERROR',
+        payload: 'Por favor busque um jogo antes de selecionar uma plataforma.',
+      });
       return;
     }
     fetchGames({
-      platforms: state.platformId,    // RAWG expects ids here
+      platforms: state.platformId, // RAWG expects ids here
       ordering: state.ordering,
       page: state.page,
       page_size: state.pageSize,
     });
   }
 
-  // Optional: Text search (uses search + precise toggle the docs mention)
-  function searchByText() {
-    if (!state.searchText.trim()) {
-      dispatch({ type: "FETCH_ERROR", payload: "Type something to search by name." });
+  function searchByText(text) {
+    const query = text ?? state.searchText;
+    if (!query.trim()) {
+      dispatch({
+        type: 'FETCH_ERROR',
+        payload: 'Digite para buscar pelo nome.',
+      });
       return;
     }
     fetchGames({
-      search: state.searchText.trim(),
+      search: query.trim(),
       search_precise: true,
       ordering: state.ordering,
       page: state.page,
@@ -146,16 +159,23 @@ export function GameProvider({ children }) {
     });
   }
 
-  const value = useMemo(() => ({
-    state, dispatch,
-    searchAll, searchByGenre, searchByPlatform, searchByText,
-  }), [state]);
+  const value = useMemo(
+    () => ({
+      state,
+      dispatch,
+      searchAll,
+      searchByGenre,
+      searchByPlatform,
+      searchByText,
+    }),
+    [state]
+  );
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
 }
 
 export function useGames() {
   const ctx = useContext(GameContext);
-  if (!ctx) throw new Error("useGames must be used inside <GameProvider>");
+  if (!ctx) throw new Error('useGames must be used inside <GameProvider>');
   return ctx;
 }
